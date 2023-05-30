@@ -20,14 +20,10 @@ struct page MR[MR_SIZE]; // real memory
 struct page MV[MV_SIZE]; // virtual memory
 struct page MS[MS_SIZE]; // swap memory
 
-int page_fault_count = 0;
 
 
 int main() {
     
-
-    // print results
-    printf("Page fault count: %d\n", page_fault_count);
 
     return 0;
 }
