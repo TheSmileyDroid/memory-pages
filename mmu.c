@@ -38,6 +38,95 @@ typedef struct circular_list_node
     struct circular_list_node *next;
 } circular_list_node;
 
+circular_list_node *clock_hand = NULL;
+
+void relogio_insert_page_table_entry(page_table_entry *page_table_entry)
+{
+    circular_list_node *new_node = malloc(sizeof(circular_list_node));
+    new_node->page_table_entry = page_table_entry;
+
+    if (clock_hand == NULL)
+    {
+        clock_hand = new_node;
+        clock_hand->next = clock_hand;
+    }
+    else
+    {
+        new_node->next = clock_hand->next;
+        clock_hand->next = new_node;
+    }
+}
+
+void relogio_switch_page_table_entry(page_table_entry *page_table_entry)
+{
+    clock_hand->page_table_entry = page_table_entry;
+}
+
+void relogio_remove_page_table_entry()
+{
+    circular_list_node *node = clock_hand->next;
+    if (node == clock_hand)
+    {
+        clock_hand = NULL;
+    }
+    else
+    {
+        clock_hand->next = node->next;
+    }
+    free(node);
+}
+
+void relogio_print()
+{
+    printf("Relógio: ");
+    if (clock_hand == NULL)
+    {
+        printf("Relógio vazio\n");
+        return;
+    }
+
+    circular_list_node *node = clock_hand;
+    do
+    {
+        printf("%d -> ", node->page_table_entry->frame);
+        node = node->next;
+    } while (node != clock_hand);
+    printf("\n");
+}
+
+void print_page_table()
+{
+    printf("Página\tPresente\tQuadro\tReferenciada\tModificada\tTempo de último acesso\tContador MRU\n");
+    for (int i = 0; i < NUM_PAGES; i++)
+    {
+        printf("%d\t%d\t\t%d\t%d\t\t%d\t\t%d\t\t\t%d\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
+    }
+}
+
+void relogio_init()
+{
+    // Initialize the clock hand
+    clock_hand = NULL;
+
+    // Insert all pages in memory into the clock
+    for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++)
+    {
+        relogio_insert_page_table_entry(&page_table[i]);
+    }
+
+    relogio_print();
+}
+
+void aging_init()
+{
+    // TODO: Implementar
+}
+
+void wsclock_init()
+{
+    // TODO: Implementar
+}
+
 // Page replacement algorithms
 unsigned int relogio()
 {
@@ -119,6 +208,15 @@ int main(int argc, char **argv)
         page_table[i].frame = -1;
     }
 
+    // Fill the real memory with pages
+    for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++)
+    {
+        page_table[i].present = 1;
+        page_table[i].frame = i;
+    }
+
+    print_page_table();
+
     // Select a page replacement algorithm
     if (argc > 1)
     {
@@ -140,32 +238,19 @@ int main(int argc, char **argv)
         }
     }
 
-    // Try to access a page that is present in memory
-    unsigned int virtual_address = 0x1234;
-    page_table[1].present = 1;
-    page_table[1].frame = 2;
-    unsigned int physical_address = virtual_to_physical(virtual_address);
-    printf("Virtual address: %x\n", virtual_address);
-    printf("Physical address: %x\n", physical_address);
-
-    // Fill the real memory with pages
-    for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++)
+    // Initialize the variables for the replacement algorithms
+    switch (algorithm)
     {
-        page_table[i].present = 1;
-        page_table[i].frame = i;
+        case RELOGIO:
+            relogio_init();
+            break;
+        case AGING:
+            aging_init();
+            break;
+        case WSCLOCK:
+            wsclock_init();
+            break;
     }
-
-    // Try to access a page that is present in memory
-    virtual_address = 0x1234;
-    physical_address = virtual_to_physical(virtual_address);
-    printf("Virtual address: %x\n", virtual_address);
-    printf("Physical address: %x\n", physical_address);
-
-    // Try to access a page that is not present in memory
-    virtual_address = 0x9123;
-    physical_address = virtual_to_physical(virtual_address);
-    printf("Virtual address: %x\n", virtual_address);
-    printf("Physical address: %x\n", physical_address);
 
     /**
      * Ideia dos testes:
@@ -186,6 +271,6 @@ int main(int argc, char **argv)
      *
      * Para encontrar o tau, checar o ultimo tick, para variar o tau dinamicamente
      */
-
+    
     return 0;
 }
