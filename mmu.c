@@ -7,10 +7,10 @@
  * Teste das implementações de Relógio, Envelhecimento e WSClock
  */
 
-#define VIRTUAL_ADDRESS_SPACE_SIZE 65536
-#define PAGE_SIZE 4096
-#define NUM_PAGES 16
-#define REAL_MEMORY_SIZE 32768
+#define VIRTUAL_ADDRESS_SPACE_SIZE 65536 // Memory size of 64KB
+#define PAGE_SIZE 4096 // Page size of 4KB
+#define NUM_PAGES 16 // Number of pages in the virtual address space
+#define REAL_MEMORY_SIZE 32768 // Memory size of 32KB
 
 typedef struct
 {
@@ -34,16 +34,21 @@ page_replacement_algorithm algorithm = RELOGIO;
 
 typedef struct circular_list_node
 {
+    unsigned int virtual_page;
     page_table_entry *page_table_entry;
     struct circular_list_node *next;
 } circular_list_node;
 
 circular_list_node *clock_hand = NULL;
 
-void relogio_insert_page_table_entry(page_table_entry *page_table_entry)
+void relogio_insert_page_table_entry(unsigned int virtual_page)
 {
+
+    page_table_entry *page_table_entry = &page_table[virtual_page];
+
     circular_list_node *new_node = malloc(sizeof(circular_list_node));
     new_node->page_table_entry = page_table_entry;
+    new_node->virtual_page = virtual_page;
 
     if (clock_hand == NULL)
     {
@@ -55,25 +60,6 @@ void relogio_insert_page_table_entry(page_table_entry *page_table_entry)
         new_node->next = clock_hand->next;
         clock_hand->next = new_node;
     }
-}
-
-void relogio_switch_page_table_entry(page_table_entry *page_table_entry)
-{
-    clock_hand->page_table_entry = page_table_entry;
-}
-
-void relogio_remove_page_table_entry()
-{
-    circular_list_node *node = clock_hand->next;
-    if (node == clock_hand)
-    {
-        clock_hand = NULL;
-    }
-    else
-    {
-        clock_hand->next = node->next;
-    }
-    free(node);
 }
 
 void relogio_print()
@@ -88,7 +74,7 @@ void relogio_print()
     circular_list_node *node = clock_hand;
     do
     {
-        printf("%d -> ", node->page_table_entry->frame);
+        printf("%d -> ", node->virtual_page);
         node = node->next;
     } while (node != clock_hand);
     printf("\n");
@@ -111,7 +97,7 @@ void relogio_init()
     // Insert all pages in memory into the clock
     for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++)
     {
-        relogio_insert_page_table_entry(&page_table[i]);
+        relogio_insert_page_table_entry(i);
     }
 
     relogio_print();
@@ -128,12 +114,38 @@ void wsclock_init()
 }
 
 // Page replacement algorithms
-unsigned int relogio()
+unsigned int relogio(unsigned int virtual_index)
 {
-    printf("Relógio\n");
-    // Implementar o algoritmo de relógio
+    if (clock_hand == NULL)
+    {
+        printf("Relógio vazio\n");
+        return -1;
+    } 
 
-    return -1;
+    page_table_entry *virtual_page = &page_table[virtual_index];
+
+    do
+    {
+        complexidade++;
+        if (clock_hand->page_table_entry->referenced == 0)
+        {
+            unsigned int frame = clock_hand->page_table_entry->frame;
+            clock_hand->page_table_entry->present = 0;
+            clock_hand->page_table_entry->referenced = 0;
+            clock_hand->page_table_entry->modified = 0;
+            clock_hand->page_table_entry->frame = -1;
+            clock_hand->page_table_entry = virtual_page;
+            clock_hand->virtual_page = virtual_index;
+            clock_hand = clock_hand->next;
+            return frame;
+        }
+        else
+        {
+            // Page not found
+            clock_hand->page_table_entry->referenced = 0;
+            clock_hand = clock_hand->next;
+        }
+    } while (1);
 }
 
 unsigned int aging()
@@ -169,7 +181,7 @@ unsigned int virtual_to_physical(unsigned int virtual_address)
         switch (algorithm)
         {
             case RELOGIO:
-                frame = relogio();
+                frame = relogio(page_index);
                 break;
             case AGING:
                 frame = aging();
@@ -192,6 +204,7 @@ unsigned int virtual_to_physical(unsigned int virtual_address)
     }
 
     unsigned int physical_address = page_table[page_index].frame * PAGE_SIZE + page_offset;
+    page_table[page_index].referenced = 1;
     return physical_address;
 }
 
@@ -251,6 +264,33 @@ int main(int argc, char **argv)
             wsclock_init();
             break;
     }
+
+    unsigned int virtual_address;
+    unsigned int physical_address;
+    virtual_address = 0x1234;
+    physical_address = virtual_to_physical(virtual_address);
+    printf("Endereço virtual: 0x%08x\n", virtual_address);
+    printf("Endereço físico: 0x%08x\n", physical_address);
+
+    virtual_address = 0x9678;
+    physical_address = virtual_to_physical(virtual_address);
+    printf("Endereço virtual: 0x%08x\n", virtual_address);
+    printf("Endereço físico: 0x%08x\n", physical_address);
+
+    print_page_table();
+    relogio_print();
+
+    virtual_address = 0xb234;
+    physical_address = virtual_to_physical(virtual_address);
+    printf("Endereço virtual: 0x%08x\n", virtual_address);
+    printf("Endereço físico: 0x%08x\n", physical_address);
+
+    print_page_table();
+    relogio_print();
+
+
+    printf("Page miss count: %d\n", page_miss_count);
+    printf("Complexidade: %d\n", complexidade);
 
     /**
      * Ideia dos testes:
