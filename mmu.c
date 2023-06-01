@@ -25,25 +25,119 @@ typedef struct
 
 page_table_entry page_table[NUM_PAGES];
 
-unsigned int virtual_to_physical(unsigned int virtual_address) {
+unsigned int page_miss_count = 0;
+unsigned int complexidade = 0;
+
+typedef enum {RELOGIO, AGING, WSCLOCK} page_replacement_algorithm;
+
+page_replacement_algorithm algorithm = RELOGIO;
+
+typedef struct circular_list_node
+{
+    page_table_entry *page_table_entry;
+    struct circular_list_node *next;
+} circular_list_node;
+
+// Page replacement algorithms
+unsigned int relogio()
+{
+    printf("Relógio\n");
+    // Implementar o algoritmo de relógio
+
+    return -1;
+}
+
+unsigned int aging()
+{
+    printf("Envelhecimento\n");
+    // Implementar o algoritmo de envelhecimento
+
+    return -1;
+}
+
+unsigned int wsclock()
+{
+    printf("WSClock\n");
+    // Implementar o algoritmo de WSClock
+
+    return -1;
+}
+
+unsigned int virtual_to_physical(unsigned int virtual_address)
+{
     unsigned int page_index = virtual_address / PAGE_SIZE;
     unsigned int page_offset = virtual_address % PAGE_SIZE;
 
-    if (page_index >= NUM_PAGES || !page_table[page_index].present) {
+    if (page_index >= NUM_PAGES || !page_table[page_index].present)
+    {
         // Page miss
-        return -1;
+        page_miss_count++;
+
+        // Memory is always full, so we need to replace a page
+
+        // Call the page replacement algorithm
+        unsigned int frame = 0;
+        switch (algorithm)
+        {
+            case RELOGIO:
+                frame = relogio();
+                break;
+            case AGING:
+                frame = aging();
+                break;
+            case WSCLOCK:
+                frame = wsclock();
+                break;
+        }
+
+        // Load the page into memory
+        page_table[page_index].frame = frame;
+
+        // Update the page table
+        page_table[page_index].present = 1;
+
+        // Return the physical address
+        unsigned int physical_address = frame * PAGE_SIZE + page_offset;
+
+        return physical_address;
     }
 
     unsigned int physical_address = page_table[page_index].frame * PAGE_SIZE + page_offset;
     return physical_address;
 }
 
-
-int main()
+void clock_tick()
 {
-    for (int i = 0; i < NUM_PAGES; i++) {
+    // Implementar o clock tick
+} 
+
+int main(int argc, char **argv)
+{
+    for (int i = 0; i < NUM_PAGES; i++)
+    {
         page_table[i].present = 0;
         page_table[i].frame = -1;
+    }
+
+    // Select a page replacement algorithm
+    if (argc > 1)
+    {
+        if (argv[1][0] == 'c')
+        {
+            algorithm = RELOGIO;
+        }
+        else if (argv[1][0] == 'a')
+        {
+            algorithm = AGING;
+        }
+        else if (argv[1][0] == 'w')
+        {
+            algorithm = WSCLOCK;
+        }
+        else {
+            printf("Invalid algorithm\n");
+            return 1;
+        }
     }
 
     // Try to access a page that is present in memory
@@ -55,7 +149,8 @@ int main()
     printf("Physical address: %x\n", physical_address);
 
     // Fill the real memory with pages
-    for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++) {
+    for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++)
+    {
         page_table[i].present = 1;
         page_table[i].frame = i;
     }
@@ -76,21 +171,21 @@ int main()
      * Ideia dos testes:
      * Calcular a complexidade dos algoritmos toda vez que ele tenha que tomar alguma decisão
      * Calcular a quantidade de Page Miss
-     * 
+     *
      * Testar com diferentes tempos de acesso
      * Testar com diferentes desvios nos valores aleatórios
      * Testar com diferentes Algoritmos de Substituição de Páginas
-     * 
-     * 
-     * Para a entrada, usar um arquivo de texto com os endereços virtuais a serem acessados, 
+     *
+     *
+     * Para a entrada, usar um arquivo de texto com os endereços virtuais a serem acessados,
      * feitos em outra linguagem que possua uma função aleatória de distribuição normal
      *
      * Para as interrupções e para os tempos usar o i da iteração do loop
      * Para cada loop realizar X acessos a memória
      * e a cada X acessos, realizar uma interrupção
-     * 
+     *
      * Para encontrar o tau, checar o ultimo tick, para variar o tau dinamicamente
-    */
+     */
 
     return 0;
 }
