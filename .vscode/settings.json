@@ -1,5 +1,8 @@
 {
-    "files.associations": {
-        "stdlib.h": "c"
-    }
+  "files.associations": {
+    "stdlib.h": "c"
+  },
+  "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
+    "clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling"
+  ]
 }

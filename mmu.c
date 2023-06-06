@@ -29,8 +29,10 @@ typedef struct
 
 page_table_entry page_table[NUM_PAGES];
 
-unsigned long page_miss_count = 0;
 unsigned long complexidade = 0;
+unsigned long ticks = 0;
+unsigned long page_miss_count = 0;
+unsigned long page_acess_count = 0;
 
 typedef enum
 {
@@ -173,6 +175,7 @@ unsigned int wsclock()
 
 unsigned int virtual_to_physical(unsigned int virtual_address)
 {
+    page_acess_count++;
     unsigned int page_index = virtual_address / PAGE_SIZE;
     unsigned int page_offset = virtual_address % PAGE_SIZE;
 
@@ -219,33 +222,30 @@ unsigned int virtual_to_physical(unsigned int virtual_address)
 void clock_tick()
 {
     // Implementar o clock tick
+    ticks++;
 }
 
-void loop(char *filename, int hits_per_tick)
+void loop(int hits_per_tick)
 {
-    FILE *file_pointer;
-    char virtual_address[7];
-    unsigned int virtual_address_int;
+    unsigned int virtual_address = 0;
     unsigned int physical_address;
-    file_pointer = fopen(filename, "r");
     int i;
-    int not_reach_eof = true;
 
-    while (not_reach_eof)
+    do
     {
         for (i = 0; i < hits_per_tick; i++)
         {
-            if (fgets(virtual_address, 7, file_pointer) == NULL)
+            scanf("%u", &virtual_address);
+            if (feof(stdin))
             {
-                not_reach_eof = false;
-                break;
+                fflush(stdout);
+                return;
             }
-            virtual_address_int = atoi(virtual_address);
-            physical_address = virtual_to_physical(virtual_address_int);
+            physical_address = virtual_to_physical(virtual_address);
+            printf("%u\n", physical_address);
         }
         clock_tick();
-    }
-    fclose(file_pointer);
+    } while (1);
 }
 
 int main(int argc, char **argv)
@@ -299,14 +299,12 @@ int main(int argc, char **argv)
         break;
     }
 
-    // input{argv[2]}.txt
-    char filename[10];
-    strcpy(filename, "input");
-    strcat(filename, argv[2]);
-    strcat(filename, ".txt");
-    loop(filename, 1000);
+    loop(1000);
+    printf("-------------------\n");
+    printf("Page acess count: %lu\n", page_acess_count);
     printf("Page miss count: %lu\n", page_miss_count);
     printf("Complexity: %lu\n", complexidade);
+    printf("Ticks: %lu\n", ticks);
 
     /**
      * Ideia dos testes:

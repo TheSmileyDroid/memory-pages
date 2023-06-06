@@ -8,5 +8,5 @@ gcc mmu.c -o mmu
 for i in {1..4}
 do
     echo "Executando teste $i..."
-    ./mmu c $i
+    ./mmu c < "input$i.txt" > "output$i.txt"
 done
