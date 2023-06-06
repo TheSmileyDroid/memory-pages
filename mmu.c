@@ -73,6 +73,27 @@ void relogio_insert_page_table_entry(unsigned int virtual_page)
     }
 }
 
+void relogio_free()
+{
+    if (clock_hand == NULL)
+    {
+        return;
+    }
+
+    // Traverse the list and free each node
+    circular_list_node *current = clock_hand->next;
+    while (current != clock_hand)
+    {
+        circular_list_node *next = current->next;
+        free(current);
+        current = next;
+    }
+
+    // Free the last node and reset the clock hand
+    free(clock_hand);
+    clock_hand = NULL;
+}
+
 void relogio_print()
 {
     printf("Relógio: ");
@@ -305,6 +326,13 @@ int main(int argc, char **argv)
     printf("Page miss count: %lu\n", page_miss_count);
     printf("Complexity: %lu\n", complexidade);
     printf("Ticks: %lu\n", ticks);
+
+    switch (algorithm)
+    {
+    case RELOGIO:
+        relogio_free();
+        break;
+    }
 
     /**
      * Ideia dos testes:
