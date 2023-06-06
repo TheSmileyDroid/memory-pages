@@ -1,6 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
+
+#define true 1
+#define false 0
 
 // Simulador de MMU (Memory Management Unit)
 /**
@@ -8,9 +12,9 @@
  */
 
 #define VIRTUAL_ADDRESS_SPACE_SIZE 65536 // Memory size of 64KB
-#define PAGE_SIZE 4096 // Page size of 4KB
-#define NUM_PAGES 16 // Number of pages in the virtual address space
-#define REAL_MEMORY_SIZE 32768 // Memory size of 32KB
+#define PAGE_SIZE 4096                   // Page size of 4KB
+#define NUM_PAGES 16                     // Number of pages in the virtual address space
+#define REAL_MEMORY_SIZE 32768           // Memory size of 32KB
 
 typedef struct
 {
@@ -25,10 +29,15 @@ typedef struct
 
 page_table_entry page_table[NUM_PAGES];
 
-unsigned int page_miss_count = 0;
-unsigned int complexidade = 0;
+unsigned long page_miss_count = 0;
+unsigned long complexidade = 0;
 
-typedef enum {RELOGIO, AGING, WSCLOCK} page_replacement_algorithm;
+typedef enum
+{
+    RELOGIO,
+    AGING,
+    WSCLOCK
+} page_replacement_algorithm;
 
 page_replacement_algorithm algorithm = RELOGIO;
 
@@ -99,8 +108,6 @@ void relogio_init()
     {
         relogio_insert_page_table_entry(i);
     }
-
-    relogio_print();
 }
 
 void aging_init()
@@ -120,7 +127,7 @@ unsigned int relogio(unsigned int virtual_index)
     {
         printf("Relógio vazio\n");
         return -1;
-    } 
+    }
 
     page_table_entry *virtual_page = &page_table[virtual_index];
 
@@ -180,15 +187,15 @@ unsigned int virtual_to_physical(unsigned int virtual_address)
         unsigned int frame = 0;
         switch (algorithm)
         {
-            case RELOGIO:
-                frame = relogio(page_index);
-                break;
-            case AGING:
-                frame = aging();
-                break;
-            case WSCLOCK:
-                frame = wsclock();
-                break;
+        case RELOGIO:
+            frame = relogio(page_index);
+            break;
+        case AGING:
+            frame = aging();
+            break;
+        case WSCLOCK:
+            frame = wsclock();
+            break;
         }
 
         // Load the page into memory
@@ -205,13 +212,41 @@ unsigned int virtual_to_physical(unsigned int virtual_address)
 
     unsigned int physical_address = page_table[page_index].frame * PAGE_SIZE + page_offset;
     page_table[page_index].referenced = 1;
+
     return physical_address;
 }
 
 void clock_tick()
 {
     // Implementar o clock tick
-} 
+}
+
+void loop(char *filename, int hits_per_tick)
+{
+    FILE *file_pointer;
+    char virtual_address[7];
+    unsigned int virtual_address_int;
+    unsigned int physical_address;
+    file_pointer = fopen(filename, "r");
+    int i;
+    int not_reach_eof = true;
+
+    while (not_reach_eof)
+    {
+        for (i = 0; i < hits_per_tick; i++)
+        {
+            if (fgets(virtual_address, 7, file_pointer) == NULL)
+            {
+                not_reach_eof = false;
+                break;
+            }
+            virtual_address_int = atoi(virtual_address);
+            physical_address = virtual_to_physical(virtual_address_int);
+        }
+        clock_tick();
+    }
+    fclose(file_pointer);
+}
 
 int main(int argc, char **argv)
 {
@@ -228,8 +263,6 @@ int main(int argc, char **argv)
         page_table[i].frame = i;
     }
 
-    print_page_table();
-
     // Select a page replacement algorithm
     if (argc > 1)
     {
@@ -245,7 +278,8 @@ int main(int argc, char **argv)
         {
             algorithm = WSCLOCK;
         }
-        else {
+        else
+        {
             printf("Invalid algorithm\n");
             return 1;
         }
@@ -254,43 +288,25 @@ int main(int argc, char **argv)
     // Initialize the variables for the replacement algorithms
     switch (algorithm)
     {
-        case RELOGIO:
-            relogio_init();
-            break;
-        case AGING:
-            aging_init();
-            break;
-        case WSCLOCK:
-            wsclock_init();
-            break;
+    case RELOGIO:
+        relogio_init();
+        break;
+    case AGING:
+        aging_init();
+        break;
+    case WSCLOCK:
+        wsclock_init();
+        break;
     }
 
-    unsigned int virtual_address;
-    unsigned int physical_address;
-    virtual_address = 0x1234;
-    physical_address = virtual_to_physical(virtual_address);
-    printf("Endereço virtual: 0x%08x\n", virtual_address);
-    printf("Endereço físico: 0x%08x\n", physical_address);
-
-    virtual_address = 0x9678;
-    physical_address = virtual_to_physical(virtual_address);
-    printf("Endereço virtual: 0x%08x\n", virtual_address);
-    printf("Endereço físico: 0x%08x\n", physical_address);
-
-    print_page_table();
-    relogio_print();
-
-    virtual_address = 0xb234;
-    physical_address = virtual_to_physical(virtual_address);
-    printf("Endereço virtual: 0x%08x\n", virtual_address);
-    printf("Endereço físico: 0x%08x\n", physical_address);
-
-    print_page_table();
-    relogio_print();
-
-
-    printf("Page miss count: %d\n", page_miss_count);
-    printf("Complexidade: %d\n", complexidade);
+    // input{argv[2]}.txt
+    char filename[10];
+    strcpy(filename, "input");
+    strcat(filename, argv[2]);
+    strcat(filename, ".txt");
+    loop(filename, 1000);
+    printf("Page miss count: %lu\n", page_miss_count);
+    printf("Complexity: %lu\n", complexidade);
 
     /**
      * Ideia dos testes:
@@ -311,6 +327,6 @@ int main(int argc, char **argv)
      *
      * Para encontrar o tau, checar o ultimo tick, para variar o tau dinamicamente
      */
-    
+
     return 0;
 }
