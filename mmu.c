@@ -16,7 +16,7 @@
 #define NUM_PAGES 16                     // Number of pages in the virtual address space
 #define REAL_MEMORY_SIZE 32768           // Memory size of 32KB
 
-typedef struct
+typedef struct page_table_entry
 {
     unsigned char referenced : 1;
     unsigned char modified : 1;
@@ -29,10 +29,12 @@ typedef struct
 
 page_table_entry page_table[NUM_PAGES];
 
-unsigned long complexidade = 0;
 unsigned long ticks = 0;
 unsigned long page_miss_count = 0;
 unsigned long page_acess_count = 0;
+unsigned long test_aux_1 = 0;
+unsigned long test_aux_2 = 0;
+unsigned long complexidade = 0;
 
 typedef enum
 {
@@ -117,7 +119,7 @@ void print_page_table()
     printf("Página\tPresente\tQuadro\tReferenciada\tModificada\tTempo de último acesso\tContador MRU\n");
     for (int i = 0; i < NUM_PAGES; i++)
     {
-        printf("%d\t%d\t\t%d\t%d\t\t%d\t\t%d\t\t\t%d\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
+        printf("%u\t%u\t\t%u\t%u\t\t%u\t\t%u\t\t\t%u\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
     }
 }
 
@@ -144,7 +146,7 @@ void wsclock_init()
 }
 
 // Page replacement algorithms
-unsigned int relogio(unsigned int virtual_index)
+unsigned short relogio(unsigned short virtual_index)
 {
     if (clock_hand == NULL)
     {
@@ -154,16 +156,17 @@ unsigned int relogio(unsigned int virtual_index)
 
     page_table_entry *virtual_page = &page_table[virtual_index];
 
-    do
+    while (1)
     {
         complexidade++;
         if (clock_hand->page_table_entry->referenced == 0)
         {
-            unsigned int frame = clock_hand->page_table_entry->frame;
+            test_aux_1++;
+            unsigned short frame = clock_hand->page_table_entry->frame;
             clock_hand->page_table_entry->present = 0;
             clock_hand->page_table_entry->referenced = 0;
             clock_hand->page_table_entry->modified = 0;
-            clock_hand->page_table_entry->frame = -1;
+            clock_hand->page_table_entry->frame = 17;
             clock_hand->page_table_entry = virtual_page;
             clock_hand->virtual_page = virtual_index;
             clock_hand = clock_hand->next;
@@ -171,12 +174,12 @@ unsigned int relogio(unsigned int virtual_index)
         }
         else
         {
+            test_aux_2++;
             // Page not found
             clock_hand->page_table_entry->referenced = 0;
-            printf("Página %d referenciada\n", clock_hand->virtual_page);
             clock_hand = clock_hand->next;
         }
-    } while (1);
+    }
 }
 
 unsigned int aging()
@@ -201,7 +204,18 @@ unsigned int virtual_to_physical(unsigned int virtual_address)
     unsigned int page_index = virtual_address / PAGE_SIZE;
     unsigned int page_offset = virtual_address % PAGE_SIZE;
 
-    if (page_index >= NUM_PAGES || !page_table[page_index].present)
+    if (page_index >= NUM_PAGES)
+    {
+        printf("Erro: endereço virtual %u inválido\n", virtual_address);
+        return -1;
+    }
+    if (page_offset >= PAGE_SIZE)
+    {
+        printf("Erro: offset %u inválido\n", page_offset);
+        return -1;
+    }
+
+    if (!page_table[page_index].present)
     {
         // Page miss
         page_miss_count++;
@@ -263,7 +277,22 @@ void loop(int hits_per_tick)
                 fflush(stdout);
                 return;
             }
+            if (virtual_address > VIRTUAL_ADDRESS_SPACE_SIZE)
+            {
+                printf("Endereço virtual inválido\n");
+                return;
+            }
             _physical_address = virtual_to_physical(virtual_address);
+            if (_physical_address == -1)
+            {
+                printf("Erro ao converter endereço virtual para físico\n");
+                return;
+            }
+            else if (_physical_address > REAL_MEMORY_SIZE)
+            {
+                printf("Erro ao converter endereço virtual para físico\n");
+                return;
+            }
         }
         clock_tick();
     } while (1);
@@ -274,7 +303,7 @@ int main(int argc, char **argv)
     for (int i = 0; i < NUM_PAGES; i++)
     {
         page_table[i].present = 0;
-        page_table[i].frame = -1;
+        page_table[i].frame = 17;
     }
 
     // Fill the real memory with pages
@@ -330,13 +359,20 @@ int main(int argc, char **argv)
     printf("-------------------\n");
     printf("Page acess count: %lu\n", page_acess_count);
     printf("Page miss count: %lu\n", page_miss_count);
-    printf("Complexity: %lu\n", complexidade);
     printf("Ticks: %lu\n", ticks);
+    printf("Test aux 1: %lu\n", test_aux_1);
+    printf("Test aux 2: %lu\n", test_aux_2);
+    printf("aux 1 + aux 2: %lu\n", test_aux_1 + test_aux_2);
+    printf("Complexity: %lu\n", complexidade);
 
     switch (algorithm)
     {
     case RELOGIO:
         relogio_free();
+        break;
+    case AGING:
+        break;
+    case WSCLOCK:
         break;
     }
 

@@ -1,6 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+struct p
+{
+    unsigned char referenced : 1;
+    unsigned char modified : 1;
+    unsigned char present : 1;
+    unsigned char pad : 5;
+};
+
 struct page
 {
     unsigned char referenced : 1;
@@ -19,6 +27,7 @@ int main(int argc, char const *argv[])
     printf("unsigned int size: %llu\n", sizeof(unsigned int));
     printf("unsigned long size: %llu\n", sizeof(unsigned long));
     printf("page size: %llu\n", sizeof(struct page));
+    printf("p size: %llu\n", sizeof(struct p));
 
     return 0;
 }

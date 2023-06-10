@@ -1,5 +1,5 @@
 echo "Criando arquivos de teste..."
-python rng.py 2047 4095 8195 32767
+python rng.py 2047 4095 8195 12287
 
 echo "Compilando..."
 gcc mmu.c -o mmu

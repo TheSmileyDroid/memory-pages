@@ -8,7 +8,7 @@ def generate_text_file(file_name, y, z):
 
     # Generates random numbers in normal distribuition
     numbers = np.random.normal(average, standard_deviation, z)
-    numbers = np.clip(numbers, 0, 65536)
+    numbers = np.clip(numbers, 0, 65535)
 
     # Rounds the generated numbers
     numbers = np.round(numbers).astype(int)
@@ -20,7 +20,7 @@ def generate_text_file(file_name, y, z):
 
 
 # Parameters
-z = 100000
+z = 1000000
 
 for i in range(1, len(sys.argv)):
     file_name = f'input{i}.txt'
