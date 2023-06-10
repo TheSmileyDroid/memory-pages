@@ -173,6 +173,7 @@ unsigned int relogio(unsigned int virtual_index)
         {
             // Page not found
             clock_hand->page_table_entry->referenced = 0;
+            printf("Página %d referenciada\n", clock_hand->virtual_page);
             clock_hand = clock_hand->next;
         }
     } while (1);
@@ -249,7 +250,7 @@ void clock_tick()
 void loop(int hits_per_tick)
 {
     unsigned int virtual_address = 0;
-    unsigned int physical_address;
+    unsigned int _physical_address;
     int i;
 
     do
@@ -262,8 +263,7 @@ void loop(int hits_per_tick)
                 fflush(stdout);
                 return;
             }
-            physical_address = virtual_to_physical(virtual_address);
-            printf("%u\n", physical_address);
+            _physical_address = virtual_to_physical(virtual_address);
         }
         clock_tick();
     } while (1);
@@ -320,7 +320,13 @@ int main(int argc, char **argv)
         break;
     }
 
-    loop(1000);
+    int hits_per_tick = 1000;
+    if (argc > 2)
+    {
+        hits_per_tick = atoi(argv[2]);
+    }
+
+    loop(hits_per_tick);
     printf("-------------------\n");
     printf("Page acess count: %lu\n", page_acess_count);
     printf("Page miss count: %lu\n", page_miss_count);

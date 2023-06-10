@@ -20,7 +20,7 @@ def generate_text_file(file_name, y, z):
 
 
 # Parameters
-z = 1000000
+z = 100000
 
 for i in range(1, len(sys.argv)):
     file_name = f'input{i}.txt'
