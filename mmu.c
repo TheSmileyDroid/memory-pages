@@ -16,6 +16,8 @@
 #define NUM_PAGES 16                     // Number of pages in the virtual address space
 #define REAL_MEMORY_SIZE 32768           // Memory size of 32KB
 
+#define UNKNOW_PAGE 65535
+
 typedef struct page_table_entry
 {
     unsigned char referenced : 1;
@@ -119,7 +121,7 @@ void print_page_table()
     printf("Página\tPresente\tQuadro\tReferenciada\tModificada\tTempo de último acesso\tContador MRU\n");
     for (int i = 0; i < NUM_PAGES; i++)
     {
-        printf("%u\t%u\t\t%u\t%u\t\t%u\t\t%u\t\t\t%u\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
+        printf("%u\t\t%u\t\t%u\t\t%u\t\t\t%u\t\t%u\t\t\t\t%u\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
     }
 }
 
@@ -166,7 +168,7 @@ unsigned short relogio(unsigned short virtual_index)
             clock_hand->page_table_entry->present = 0;
             clock_hand->page_table_entry->referenced = 0;
             clock_hand->page_table_entry->modified = 0;
-            clock_hand->page_table_entry->frame = 17;
+            clock_hand->page_table_entry->frame = UNKNOW_PAGE;
             clock_hand->page_table_entry = virtual_page;
             clock_hand->virtual_page = virtual_index;
             clock_hand = clock_hand->next;
@@ -303,7 +305,7 @@ int main(int argc, char **argv)
     for (int i = 0; i < NUM_PAGES; i++)
     {
         page_table[i].present = 0;
-        page_table[i].frame = 17;
+        page_table[i].frame = UNKNOW_PAGE;
     }
 
     // Fill the real memory with pages
@@ -364,6 +366,7 @@ int main(int argc, char **argv)
     printf("Test aux 2: %lu\n", test_aux_2);
     printf("aux 1 + aux 2: %lu\n", test_aux_1 + test_aux_2);
     printf("Complexity: %lu\n", complexidade);
+    print_page_table();
 
     switch (algorithm)
     {
