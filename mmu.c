@@ -34,8 +34,6 @@ page_table_entry page_table[NUM_PAGES];
 unsigned long ticks = 0;
 unsigned long page_miss_count = 0;
 unsigned long page_acess_count = 0;
-unsigned long test_aux_1 = 0;
-unsigned long test_aux_2 = 0;
 unsigned long complexidade = 0;
 
 typedef enum
@@ -47,21 +45,23 @@ typedef enum
 
 page_replacement_algorithm algorithm = RELOGIO;
 
-typedef struct circular_list_node
+/**Relogio**/
+
+typedef struct relogio_node
 {
     unsigned int virtual_page;
     page_table_entry *page_table_entry;
-    struct circular_list_node *next;
-} circular_list_node;
+    struct relogio_node *next;
+} relogio_node;
 
-circular_list_node *clock_hand = NULL;
+relogio_node *clock_hand = NULL;
 
 void relogio_insert_page_table_entry(unsigned int virtual_page)
 {
 
     page_table_entry *page_table_entry = &page_table[virtual_page];
 
-    circular_list_node *new_node = malloc(sizeof(circular_list_node));
+    relogio_node *new_node = malloc(sizeof(relogio_node));
     new_node->page_table_entry = page_table_entry;
     new_node->virtual_page = virtual_page;
 
@@ -85,10 +85,10 @@ void relogio_free()
     }
 
     // Traverse the list and free each node
-    circular_list_node *current = clock_hand->next;
+    relogio_node *current = clock_hand->next;
     while (current != clock_hand)
     {
-        circular_list_node *next = current->next;
+        relogio_node *next = current->next;
         free(current);
         current = next;
     }
@@ -107,22 +107,13 @@ void relogio_print()
         return;
     }
 
-    circular_list_node *node = clock_hand;
+    relogio_node *node = clock_hand;
     do
     {
         printf("%d -> ", node->virtual_page);
         node = node->next;
     } while (node != clock_hand);
     printf("\n");
-}
-
-void print_page_table()
-{
-    printf("Página\tPresente\tQuadro\tReferenciada\tModificada\tTempo de último acesso\tContador MRU\n");
-    for (int i = 0; i < NUM_PAGES; i++)
-    {
-        printf("%u\t\t%u\t\t%u\t\t%u\t\t\t%u\t\t%u\t\t\t\t%u\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
-    }
 }
 
 void relogio_init()
@@ -137,17 +128,6 @@ void relogio_init()
     }
 }
 
-void aging_init()
-{
-    // TODO: Implementar
-}
-
-void wsclock_init()
-{
-    // TODO: Implementar
-}
-
-// Page replacement algorithms
 unsigned short relogio(unsigned short virtual_index)
 {
     if (clock_hand == NULL)
@@ -163,7 +143,6 @@ unsigned short relogio(unsigned short virtual_index)
         complexidade++;
         if (clock_hand->page_table_entry->referenced == 0)
         {
-            test_aux_1++;
             unsigned short frame = clock_hand->page_table_entry->frame;
             clock_hand->page_table_entry->present = 0;
             clock_hand->page_table_entry->referenced = 0;
@@ -176,12 +155,18 @@ unsigned short relogio(unsigned short virtual_index)
         }
         else
         {
-            test_aux_2++;
             // Page not found
             clock_hand->page_table_entry->referenced = 0;
             clock_hand = clock_hand->next;
         }
     }
+}
+
+/**Aging**/
+
+void aging_init()
+{
+    // TODO: Implementar
 }
 
 unsigned int aging()
@@ -192,15 +177,70 @@ unsigned int aging()
     return -1;
 }
 
-unsigned int wsclock()
-{
-    printf("WSClock\n");
-    // Implementar o algoritmo de WSClock
+/**WSClock**/
 
-    return -1;
+typedef struct wsclock_node
+{
+    unsigned int virtual_page;
+    page_table_entry *page_table_entry;
+    struct wsclock_node *next;
+} wsclock_node;
+
+wsclock_node *wsclock_hand = NULL;
+unsigned int tau = 0;
+
+unsigned long temp_tick = 0;
+unsigned long temp_page_miss_count = 0;
+unsigned long temp_page_acess_count = 0;
+unsigned long temp_complexidade = 0;
+
+void wsclock_insert_page_table_entry(unsigned int virtual_page)
+{
+    page_table_entry *page_table_entry = &page_table[virtual_page];
+
+    wsclock_node *new_node = malloc(sizeof(wsclock_node));
+    new_node->page_table_entry = page_table_entry;
+    new_node->virtual_page = virtual_page;
+
+    if (wsclock_hand == NULL)
+    {
+        wsclock_hand = new_node;
+        wsclock_hand->next = wsclock_hand;
+    }
+    else
+    {
+        new_node->next = wsclock_hand->next;
+        wsclock_hand->next = new_node;
+    }
 }
 
-unsigned int virtual_to_physical(unsigned int virtual_address)
+void wsclock_init()
+{
+    wsclock_hand = NULL;
+    tau = 0;
+
+    // Insert all pages in memory into the clock
+    for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++)
+    {
+        wsclock_insert_page_table_entry(i);
+    }
+}
+
+unsigned int wsclock()
+{
+    
+}
+
+void print_page_table()
+{
+    printf("Página\tPresente\tQuadro\tReferenciada\tModificada\tTempo de último acesso\tContador MRU\n");
+    for (int i = 0; i < NUM_PAGES; i++)
+    {
+        printf("%u\t\t%u\t\t%u\t\t%u\t\t\t%u\t\t%u\t\t\t\t%u\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
+    }
+}
+
+unsigned int virtual_to_physical(unsigned int virtual_address, unsigned int time)
 {
     page_acess_count++;
     unsigned int page_index = virtual_address / PAGE_SIZE;
@@ -263,6 +303,7 @@ void clock_tick()
     ticks++;
 }
 
+
 void loop(int hits_per_tick)
 {
     unsigned int virtual_address = 0;
@@ -284,7 +325,7 @@ void loop(int hits_per_tick)
                 printf("Endereço virtual inválido\n");
                 return;
             }
-            _physical_address = virtual_to_physical(virtual_address);
+            _physical_address = virtual_to_physical(virtual_address, ticks);
             if (_physical_address == -1)
             {
                 printf("Erro ao converter endereço virtual para físico\n");
@@ -362,9 +403,6 @@ int main(int argc, char **argv)
     printf("Page acess count: %lu\n", page_acess_count);
     printf("Page miss count: %lu\n", page_miss_count);
     printf("Ticks: %lu\n", ticks);
-    printf("Test aux 1: %lu\n", test_aux_1);
-    printf("Test aux 2: %lu\n", test_aux_2);
-    printf("aux 1 + aux 2: %lu\n", test_aux_1 + test_aux_2);
     printf("Complexity: %lu\n", complexidade);
     print_page_table();
 
