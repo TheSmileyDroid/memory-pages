@@ -189,10 +189,16 @@ typedef struct wsclock_node
 wsclock_node *wsclock_hand = NULL;
 unsigned int tau = 0;
 
-unsigned long temp_tick = 0;
-unsigned long temp_page_miss_count = 0;
-unsigned long temp_page_acess_count = 0;
-unsigned long temp_complexidade = 0;
+typedef struct tick_data
+{
+    unsigned long tick;
+    unsigned long page_miss_count;
+    unsigned long page_acess_count;
+    unsigned long complexidade;
+} tick_data;
+
+tick_data current_tick_data;
+tick_data last_tick_data;
 
 void wsclock_insert_page_table_entry(unsigned int virtual_page)
 {
@@ -218,6 +224,15 @@ void wsclock_init()
 {
     wsclock_hand = NULL;
     tau = 0;
+    current_tick_data.tick = 0;
+    current_tick_data.page_miss_count = 0;
+    current_tick_data.page_acess_count = 0;
+    current_tick_data.complexidade = 0;
+
+    last_tick_data.tick = 0;
+    last_tick_data.page_miss_count = 0;
+    last_tick_data.page_acess_count = 0;
+    last_tick_data.complexidade = 0;
 
     // Insert all pages in memory into the clock
     for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++)
@@ -226,7 +241,7 @@ void wsclock_init()
     }
 }
 
-unsigned int wsclock()
+unsigned int wsclock(unsigned int virtual_index)
 {
     
 }
@@ -275,7 +290,7 @@ unsigned int virtual_to_physical(unsigned int virtual_address, unsigned int time
             frame = aging();
             break;
         case WSCLOCK:
-            frame = wsclock();
+            frame = wsclock(page_index);
             break;
         }
 
@@ -301,6 +316,17 @@ void clock_tick()
 {
     // Implementar o clock tick
     ticks++;
+
+    switch (algorithm)
+    {
+    case RELOGIO:
+        break;
+    case AGING:
+        break;
+    case WSCLOCK:
+        
+        break;
+    }
 }
 
 
