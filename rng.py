@@ -3,12 +3,12 @@ import numpy as np
 
 
 def generate_text_file(file_name, y, z):
-    average = 32768
+    average = 2147483648
     standard_deviation = y
 
     # Generates random numbers in normal distribuition
     numbers = np.random.normal(average, standard_deviation, z)
-    numbers = np.clip(numbers, 0, 65535)
+    numbers = np.clip(numbers, 0, 4294967295)
 
     # Rounds the generated numbers
     numbers = np.round(numbers).astype(int)
@@ -20,7 +20,7 @@ def generate_text_file(file_name, y, z):
 
 
 # Parameters
-z = 1000000
+z = 10000000
 
 for i in range(1, len(sys.argv)):
     file_name = f'input{i}.txt'

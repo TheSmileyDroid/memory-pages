@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
 
 #define true 1
 #define false 0
@@ -11,12 +12,14 @@
  * Teste das implementações de Relógio, Envelhecimento e WSClock
  */
 
-#define VIRTUAL_ADDRESS_SPACE_SIZE 65536 // Memory size of 64KB
-#define PAGE_SIZE 4096                   // Page size of 4KB
-#define NUM_PAGES 16                     // Number of pages in the virtual address space
-#define REAL_MEMORY_SIZE 32768           // Memory size of 32KB
+#define REAL_MEMORY_SIZE 2147483648 // Memory size of 2GB
+#define VIRTUAL_MEMORY_SIZE (REAL_MEMORY_SIZE * 2) // Virtual memory size of 4GB
+#define PAGE_SIZE 4096 // Page size of 4KB
+#define VIRTUAL_ADDRESS_SPACE_SIZE (VIRTUAL_MEMORY_SIZE / PAGE_SIZE) // Address space size of 1M pages
 
-#define UNKNOW_PAGE 65535
+#define UNKNOW_PAGE (unsigned int)-1
+
+#define TICKS_PER_SECOND 1000000
 
 typedef struct page_table_entry
 {
@@ -24,12 +27,12 @@ typedef struct page_table_entry
     unsigned char modified : 1;
     unsigned char present : 1;
     unsigned char pad : 5;
-    unsigned short frame;
+    unsigned int frame;
     unsigned char mru_count;
-    unsigned short last_access_time;
+    unsigned int last_access_time;
 } page_table_entry;
 
-page_table_entry page_table[NUM_PAGES];
+page_table_entry page_table[VIRTUAL_ADDRESS_SPACE_SIZE];
 
 unsigned long ticks = 0;
 unsigned long page_miss_count = 0;
@@ -138,7 +141,7 @@ unsigned short relogio(unsigned short virtual_index)
 
     page_table_entry *virtual_page = &page_table[virtual_index];
 
-    while (1)
+    do
     {
         complexidade++;
         if (clock_hand->page_table_entry->referenced == 0)
@@ -159,7 +162,7 @@ unsigned short relogio(unsigned short virtual_index)
             clock_hand->page_table_entry->referenced = 0;
             clock_hand = clock_hand->next;
         }
-    }
+    } while (true);
 }
 
 /**Aging**/
@@ -249,7 +252,7 @@ unsigned int wsclock(unsigned int virtual_index)
 void print_page_table()
 {
     printf("Página\tPresente\tQuadro\tReferenciada\tModificada\tTempo de último acesso\tContador MRU\n");
-    for (int i = 0; i < NUM_PAGES; i++)
+    for (int i = 0; i < VIRTUAL_ADDRESS_SPACE_SIZE; i++)
     {
         printf("%u\t\t%u\t\t%u\t\t%u\t\t\t%u\t\t%u\t\t\t\t%u\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
     }
@@ -261,7 +264,7 @@ unsigned int virtual_to_physical(unsigned int virtual_address, unsigned int time
     unsigned int page_index = virtual_address / PAGE_SIZE;
     unsigned int page_offset = virtual_address % PAGE_SIZE;
 
-    if (page_index >= NUM_PAGES)
+    if (page_index >= VIRTUAL_ADDRESS_SPACE_SIZE)
     {
         printf("Erro: endereço virtual %u inválido\n", virtual_address);
         return -1;
@@ -312,6 +315,21 @@ unsigned int virtual_to_physical(unsigned int virtual_address, unsigned int time
     return physical_address;
 }
 
+void set_bit_r_to_zero()
+{
+    for (int i = 0; i < VIRTUAL_ADDRESS_SPACE_SIZE; i++)
+    {
+        complexidade++;
+        page_table[i].referenced = 0;
+    }
+}
+
+void recalculate_tau()
+{
+        
+    
+}
+
 void clock_tick()
 {
     // Implementar o clock tick
@@ -320,35 +338,50 @@ void clock_tick()
     switch (algorithm)
     {
     case RELOGIO:
+        set_bit_r_to_zero();
         break;
     case AGING:
         break;
     case WSCLOCK:
-        
-        break;
+        recalculate_tau();
     }
 }
 
+#define M_PI 3.14159265358979323846
+
+double generateNormalRandomNumber(double mean, double stdDev)
+{
+    double u1 = 0.0, u2 = 0.0;
+    u1 = rand() * (1.0 / RAND_MAX);
+    u2 = rand() * (1.0 / RAND_MAX);
+    double z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
+    return z0 * stdDev + mean;
+}
 
 void loop(int hits_per_tick)
 {
     unsigned int virtual_address = 0;
     unsigned int _physical_address;
+    int j;
     int i;
+    srand(0);
+
+    double mean = VIRTUAL_MEMORY_SIZE / 2;
+    double stdDev = VIRTUAL_MEMORY_SIZE / 10;
 
     do
     {
-        for (i = 0; i < hits_per_tick; i++)
+        for (j = 0; j < hits_per_tick; j++)
         {
-            scanf("%u", &virtual_address);
-            if (feof(stdin))
-            {
-                fflush(stdout);
+            virtual_address = generateNormalRandomNumber(mean, stdDev);
+
+            if (i > 100) {
                 return;
             }
-            if (virtual_address > VIRTUAL_ADDRESS_SPACE_SIZE)
+
+            if (virtual_address >= VIRTUAL_MEMORY_SIZE)
             {
-                printf("Endereço virtual inválido\n");
+                printf("Erro: Endereço virtual %u inválido\n", virtual_address);
                 return;
             }
             _physical_address = virtual_to_physical(virtual_address, ticks);
@@ -364,12 +397,13 @@ void loop(int hits_per_tick)
             }
         }
         clock_tick();
+        i += 1;
     } while (1);
 }
 
 int main(int argc, char **argv)
 {
-    for (int i = 0; i < NUM_PAGES; i++)
+    for (int i = 0; i < VIRTUAL_ADDRESS_SPACE_SIZE; i++)
     {
         page_table[i].present = 0;
         page_table[i].frame = UNKNOW_PAGE;
@@ -429,8 +463,8 @@ int main(int argc, char **argv)
     printf("Page acess count: %lu\n", page_acess_count);
     printf("Page miss count: %lu\n", page_miss_count);
     printf("Ticks: %lu\n", ticks);
+    printf("Acessos por tick: %d\n", hits_per_tick);
     printf("Complexity: %lu\n", complexidade);
-    print_page_table();
 
     switch (algorithm)
     {
@@ -445,22 +479,28 @@ int main(int argc, char **argv)
 
     /**
      * Ideia dos testes:
-     * Calcular a complexidade dos algoritmos toda vez que ele tenha que tomar alguma decisão
-     * Calcular a quantidade de Page Miss
+     * ~Calcular a complexidade dos algoritmos toda vez que ele tenha que tomar alguma decisão
+     * ~Calcular a quantidade de Page Miss
      *
-     * Testar com diferentes tempos de acesso
-     * Testar com diferentes desvios nos valores aleatórios
+     * Testar com diferentes tempos de acesso*
+     * ~Testar com diferentes desvios nos valores aleatórios
+     * Implementar uma forma de definir a seed
      * Testar com diferentes Algoritmos de Substituição de Páginas
      *
-     *
-     * Para a entrada, usar um arquivo de texto com os endereços virtuais a serem acessados,
-     * feitos em outra linguagem que possua uma função aleatória de distribuição normal
+     * ~Para a entrada, usar um arquivo de texto com os endereços virtuais a serem acessados,
+     * ~feitos em outra linguagem que possua uma função aleatória de distribuição normal
      *
      * Para as interrupções e para os tempos usar o i da iteração do loop
-     * Para cada loop realizar X acessos a memória
+     * Para cada loop realizar X acessos a memória*
      * e a cada X acessos, realizar uma interrupção
      *
      * Para encontrar o tau, checar o ultimo tick, para variar o tau dinamicamente
+     * 
+     * Usar uma memória real de 2GB e uma memória virtual de 4GB
+     * Usar um tick real de algum processador real
+     * 
+     * Refazer os números aleatórios em C
+     * 
      */
 
     return 0;
