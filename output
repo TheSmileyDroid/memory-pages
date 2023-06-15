@@ -1,0 +1,34 @@
+Compilando...
+-------------------
+*Algorithm: Relógio
+*Page acess count: 10000
+*Ticks: 100
+*Acessos por tick: 100
+*Seed: 1
+*Standard Deviation: 429496729 (10%)
+*tau: 200
+Complexity: 104862628
+Page miss count: 5028
+Page fault rate: 0.502800
+-------------------
+*Algorithm: WSClock
+*Page acess count: 10000
+*Ticks: 100
+*Acessos por tick: 100
+*Seed: 1
+*Standard Deviation: 429496729 (10%)
+*tau: 10000
+Complexity: 104876598
+Page miss count: 5008
+Page fault rate: 0.500800
+-------------------
+*Algorithm: Aging
+*Page acess count: 10000
+*Ticks: 100
+*Acessos por tick: 100
+*Seed: 1
+*Standard Deviation: 429496729 (10%)
+*tau: 200
+Complexity: 7747928064
+Page miss count: 4926
+Page fault rate: 0.492600
