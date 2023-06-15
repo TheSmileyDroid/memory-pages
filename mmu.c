@@ -37,7 +37,7 @@ typedef struct
 
 page_table_entry page_table[VIRTUAL_ADDRESS_SPACE_SIZE];
 
-unsigned long ticks = 0;
+unsigned long interrupts = 0;
 unsigned long virtual_time = 0;
 
 typedef struct tick_data
@@ -280,7 +280,7 @@ typedef struct wsclock_node
 } wsclock_node;
 
 wsclock_node *wsclock_hand = NULL;
-unsigned int tau = 200; // Tau is the time interval to consider a page old
+unsigned int tau = 0; // Tau is the time interval to consider a page old
 
 void wsclock_insert_page_table_entry(unsigned int virtual_page)
 {
@@ -473,9 +473,9 @@ void set_bit_r_to_zero()
     }
 }
 
-void clock_tick()
+void clock_interrupt()
 {
-    ticks++;
+    interrupts++;
 
     switch (algorithm)
     {
@@ -515,7 +515,7 @@ double generateNormalRandomNumber(double mean, double stdDev)
     return result;
 }
 
-void loop(int acessos_por_interrupcao, int num_ticks, int stdDevMultiplier, int seed)
+void loop(int acessos_por_interrupcao, int num_interrupts, int stdDevMultiplier, int seed)
 {
     unsigned int virtual_address = 0;
     unsigned int _physical_address;
@@ -527,7 +527,7 @@ void loop(int acessos_por_interrupcao, int num_ticks, int stdDevMultiplier, int 
     double mean = VIRTUAL_MEMORY_SIZE / 2;
     double stdDev = stdDevMultiplier * VIRTUAL_MEMORY_SIZE / 100;
 
-    for (i = 1; i <= num_ticks; i++)
+    for (i = 1; i <= num_interrupts; i++)
     {
         for (j = 0; j < acessos_por_interrupcao; j++)
         {
@@ -539,7 +539,7 @@ void loop(int acessos_por_interrupcao, int num_ticks, int stdDevMultiplier, int 
             }
             virtual_time++;
         }
-        clock_tick();
+        clock_interrupt();
     }
 }
 
@@ -606,8 +606,8 @@ int main(int argc, char **argv)
     last_tick_data.page_acess_count = 0;
     last_tick_data.complexidade = 0;
 
-    int acessos_por_interrupcao = 10;
-    int num_ticks = 100;
+    int acessos_por_interrupcao = 3000;
+    int num_interrupts = 100;
     int seed = 1;
     int stdDevMultiplier = 10;
     if (argc > 2)
@@ -620,23 +620,31 @@ int main(int argc, char **argv)
     }
     if (argc > 4)
     {
-        tau = atoi(argv[4]);
+        seed = atoi(argv[4]);
+    }
+    if (argc > 5)
+    {
+        num_interrupts = atoi(argv[5]);
+    }
+    if (argc > 6)
+    {
+        tau = atoi(argv[6]);
     }
 
 #ifdef DEBUG
     print_page_table();
 #endif
 
-    loop(acessos_por_interrupcao, num_ticks, stdDevMultiplier, seed);
+    loop(acessos_por_interrupcao, num_interrupts, stdDevMultiplier, seed);
 
     printf("-------------------\n");
     printf("*Algorithm: %s\n", algorithm == RELOGIO ? "Relógio" : algorithm == AGING ? "Aging"
                                                                                      : "WSClock");
     printf("*Page acess count: %lu\n", current_tick_data.page_acess_count);
-    printf("*Ticks: %lu\n", ticks);
+    printf("*Interrupções: %lu\n", interrupts);
     printf("*Acessos por tick: %d\n", acessos_por_interrupcao);
     printf("*Seed: %d\n", seed);
-    printf("*Standard Deviation: %d (%d\%)\n", stdDevMultiplier * VIRTUAL_MEMORY_SIZE / 100, stdDevMultiplier);
+    printf("*Standard Deviation: %ld (%d per cent)\n", stdDevMultiplier * VIRTUAL_MEMORY_SIZE / 100, stdDevMultiplier);
     printf("*tau: %d\n", tau);
     printf("Complexity: %lu\n", current_tick_data.complexidade);
     printf("Page miss count: %lu\n", current_tick_data.page_miss_count);
@@ -665,22 +673,22 @@ int main(int argc, char **argv)
      *
      * Testar com diferentes tempos de acesso*
      * ~Testar com diferentes desvios nos valores aleatórios
-     * Implementar uma forma de definir a seed
-     * Testar com diferentes Algoritmos de Substituição de Páginas
+     * ~Implementar uma forma de definir a seed
+     * ~Testar com diferentes Algoritmos de Substituição de Páginas
      *
      * ~Para a entrada, usar um arquivo de texto com os endereços virtuais a serem acessados,
      * ~feitos em outra linguagem que possua uma função aleatória de distribuição normal
      *
-     * Para as interrupções e para os tempos usar o i da iteração do loop
-     * Para cada loop realizar X acessos a memória*
-     * e a cada X acessos, realizar uma interrupção
+     * ~Para as interrupções e para os tempos usar o i da iteração do loop
+     * ~Para cada loop realizar X acessos a memória*
+     * ~e a cada X acessos, realizar uma interrupção
      *
-     * Para encontrar o tau, checar o ultimo tick, para variar o tau dinamicamente
+     * ~Para encontrar o tau, checar o ultimo tick, para variar o tau dinamicamente
      *
-     * Usar uma memória real de 2GB e uma memória virtual de 4GB
-     * Usar um tick real de algum processador real
+     * ~Usar uma memória real de 2GB e uma memória virtual de 4GB
+     * ~Usar um tick real de algum processador real
      *
-     * Refazer os números aleatórios em C
+     * ~Refazer os números aleatórios em C
      *
      */
 
