@@ -9,7 +9,8 @@
                 "-g",
                 "${workspaceFolder}/mmu.c",
                 "-o",
-                "${workspaceFolder}/mmu"
+                "${workspaceFolder}/mmu",
+                "-lm"
             ],
             "options": {
                 "cwd": "${fileDirname}"

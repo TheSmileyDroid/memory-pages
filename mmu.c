@@ -12,16 +12,18 @@
  * Teste das implementações de Relógio, Envelhecimento e WSClock
  */
 
-#define REAL_MEMORY_SIZE 2147483648 // Memory size of 2GB
-#define VIRTUAL_MEMORY_SIZE (REAL_MEMORY_SIZE * 2) // Virtual memory size of 4GB
-#define PAGE_SIZE 4096 // Page size of 4KB
+#ifdef DEBUG
+#define REAL_MEMORY_SIZE 32768 // Memory size of 32KB is 32768
+#else
+#define REAL_MEMORY_SIZE 2147483648 // Memory size of 2GB is 2147483648
+#endif
+#define VIRTUAL_MEMORY_SIZE (REAL_MEMORY_SIZE * 2)                   // Virtual memory size of 4GB
+#define PAGE_SIZE 4096                                               // Page size of 4KB
 #define VIRTUAL_ADDRESS_SPACE_SIZE (VIRTUAL_MEMORY_SIZE / PAGE_SIZE) // Address space size of 1M pages
 
-#define UNKNOW_PAGE (unsigned int)-1
+#define UNKNOW_PAGE (REAL_MEMORY_SIZE / PAGE_SIZE)
 
-#define TICKS_PER_SECOND 1000000
-
-typedef struct page_table_entry
+typedef struct
 {
     unsigned char referenced : 1;
     unsigned char modified : 1;
@@ -35,6 +37,7 @@ typedef struct page_table_entry
 page_table_entry page_table[VIRTUAL_ADDRESS_SPACE_SIZE];
 
 unsigned long ticks = 0;
+unsigned long virtual_time = 0;
 unsigned long page_miss_count = 0;
 unsigned long page_acess_count = 0;
 unsigned long complexidade = 0;
@@ -46,7 +49,7 @@ typedef enum
     WSCLOCK
 } page_replacement_algorithm;
 
-page_replacement_algorithm algorithm = RELOGIO;
+page_replacement_algorithm algorithm = WSCLOCK;
 
 /**Relogio**/
 
@@ -131,6 +134,19 @@ void relogio_init()
     }
 }
 
+unsigned short relogio_replace_page(page_table_entry *virtual_page, unsigned short virtual_index)
+{
+    unsigned short frame = clock_hand->page_table_entry->frame;
+    clock_hand->page_table_entry->present = 0;
+    clock_hand->page_table_entry->referenced = 0;
+    clock_hand->page_table_entry->modified = 0;
+    clock_hand->page_table_entry->frame = UNKNOW_PAGE;
+    clock_hand->page_table_entry = virtual_page;
+    clock_hand->virtual_page = virtual_index;
+    clock_hand = clock_hand->next;
+    return frame;
+}
+
 unsigned short relogio(unsigned short virtual_index)
 {
     if (clock_hand == NULL)
@@ -146,19 +162,10 @@ unsigned short relogio(unsigned short virtual_index)
         complexidade++;
         if (clock_hand->page_table_entry->referenced == 0)
         {
-            unsigned short frame = clock_hand->page_table_entry->frame;
-            clock_hand->page_table_entry->present = 0;
-            clock_hand->page_table_entry->referenced = 0;
-            clock_hand->page_table_entry->modified = 0;
-            clock_hand->page_table_entry->frame = UNKNOW_PAGE;
-            clock_hand->page_table_entry = virtual_page;
-            clock_hand->virtual_page = virtual_index;
-            clock_hand = clock_hand->next;
-            return frame;
+            return relogio_replace_page(virtual_page, virtual_index);
         }
         else
         {
-            // Page not found
             clock_hand->page_table_entry->referenced = 0;
             clock_hand = clock_hand->next;
         }
@@ -190,11 +197,10 @@ typedef struct wsclock_node
 } wsclock_node;
 
 wsclock_node *wsclock_hand = NULL;
-unsigned int tau = 0;
+unsigned int tau = 200; // Tau is the time interval to consider a page old
 
 typedef struct tick_data
 {
-    unsigned long tick;
     unsigned long page_miss_count;
     unsigned long page_acess_count;
     unsigned long complexidade;
@@ -223,19 +229,31 @@ void wsclock_insert_page_table_entry(unsigned int virtual_page)
     }
 }
 
+void wsclock_free()
+{
+    if (wsclock_hand == NULL)
+    {
+        return;
+    }
+
+    // Traverse the list and free each node
+    wsclock_node *current = wsclock_hand->next;
+    while (current != wsclock_hand)
+    {
+        wsclock_node *next = current->next;
+        free(current);
+        current = next;
+    }
+
+    // Free the last node and reset the clock hand
+    free(wsclock_hand);
+    wsclock_hand = NULL;
+}
+
 void wsclock_init()
 {
     wsclock_hand = NULL;
-    tau = 0;
-    current_tick_data.tick = 0;
-    current_tick_data.page_miss_count = 0;
-    current_tick_data.page_acess_count = 0;
-    current_tick_data.complexidade = 0;
-
-    last_tick_data.tick = 0;
-    last_tick_data.page_miss_count = 0;
-    last_tick_data.page_acess_count = 0;
-    last_tick_data.complexidade = 0;
+    tau = 50;
 
     // Insert all pages in memory into the clock
     for (int i = 0; i < REAL_MEMORY_SIZE / PAGE_SIZE; i++)
@@ -244,23 +262,76 @@ void wsclock_init()
     }
 }
 
+unsigned short wsclock_replace_page(page_table_entry *virtual_page, unsigned short virtual_index)
+{
+    unsigned short frame = wsclock_hand->page_table_entry->frame;
+    wsclock_hand->page_table_entry->present = 0;
+    wsclock_hand->page_table_entry->referenced = 0;
+    wsclock_hand->page_table_entry->modified = 0;
+    wsclock_hand->page_table_entry->frame = UNKNOW_PAGE;
+    wsclock_hand->page_table_entry = virtual_page;
+    wsclock_hand->virtual_page = virtual_index;
+    wsclock_hand = wsclock_hand->next;
+    return frame;
+}
+
 unsigned int wsclock(unsigned int virtual_index)
 {
-    
+    if (wsclock_hand == NULL)
+    {
+        printf("WSClock vazio\n");
+        return -1;
+    }
+
+    page_table_entry *virtual_page = &page_table[virtual_index];
+
+    do
+    {
+        wsclock_hand = wsclock_hand->next;
+        current_tick_data.complexidade++;
+        if (wsclock_hand->page_table_entry->referenced == 0)
+        {
+            unsigned int page_age = virtual_time - virtual_page->last_access_time;
+            if (page_age >= tau)
+            {
+                if (virtual_page->modified == 0) // página não modificada
+                {
+                    return wsclock_replace_page(virtual_page, virtual_index);
+                }
+            }
+            else
+            {
+                virtual_time++;
+            }
+        }
+        else
+        {
+            wsclock_hand->page_table_entry->referenced = 0;
+            wsclock_hand->page_table_entry->last_access_time = virtual_time;
+        }
+
+    } while (true);
 }
 
 void print_page_table()
 {
-    printf("Página\tPresente\tQuadro\tReferenciada\tModificada\tTempo de último acesso\tContador MRU\n");
+    printf("Página\tPresente\tQuadro\t\tReferenciada\tModificada\tTempo de último acesso\tContador MRU\n");
     for (int i = 0; i < VIRTUAL_ADDRESS_SPACE_SIZE; i++)
     {
-        printf("%u\t\t%u\t\t%u\t\t%u\t\t\t%u\t\t%u\t\t\t\t%u\n", i, page_table[i].present, page_table[i].frame, page_table[i].referenced, page_table[i].modified, page_table[i].last_access_time, page_table[i].mru_count);
+        printf("%u\t%u\t\t%u\t\t%u\t\t%u\t\t%u\t\t\t%u\n",
+               i,
+               page_table[i].present,
+               page_table[i].frame,
+               page_table[i].referenced,
+               page_table[i].modified,
+               page_table[i].last_access_time,
+               page_table[i].mru_count);
     }
 }
 
-unsigned int virtual_to_physical(unsigned int virtual_address, unsigned int time)
+unsigned int virtual_to_physical(unsigned int virtual_address)
 {
-    page_acess_count++;
+    current_tick_data.page_acess_count++;
     unsigned int page_index = virtual_address / PAGE_SIZE;
     unsigned int page_offset = virtual_address % PAGE_SIZE;
 
@@ -278,7 +349,7 @@ unsigned int virtual_to_physical(unsigned int virtual_address, unsigned int time
     if (!page_table[page_index].present)
     {
         // Page miss
-        page_miss_count++;
+        current_tick_data.page_miss_count++;
 
         // Memory is always full, so we need to replace a page
 
@@ -302,6 +373,9 @@ unsigned int virtual_to_physical(unsigned int virtual_address, unsigned int time
 
         // Update the page table
         page_table[page_index].present = 1;
+        page_table[page_index].referenced = 1;
+        page_table[page_index].modified = 0;
+        page_table[page_index].last_access_time = virtual_time;
 
         // Return the physical address
         unsigned int physical_address = frame * PAGE_SIZE + page_offset;
@@ -311,6 +385,7 @@ unsigned int virtual_to_physical(unsigned int virtual_address, unsigned int time
 
     unsigned int physical_address = page_table[page_index].frame * PAGE_SIZE + page_offset;
     page_table[page_index].referenced = 1;
+    page_table[page_index].last_access_time = virtual_time;
 
     return physical_address;
 }
@@ -319,20 +394,13 @@ void set_bit_r_to_zero()
 {
     for (int i = 0; i < VIRTUAL_ADDRESS_SPACE_SIZE; i++)
     {
-        complexidade++;
+        current_tick_data.complexidade++;
         page_table[i].referenced = 0;
     }
 }
 
-void recalculate_tau()
-{
-        
-    
-}
-
 void clock_tick()
 {
-    // Implementar o clock tick
     ticks++;
 
     switch (algorithm)
@@ -343,8 +411,13 @@ void clock_tick()
     case AGING:
         break;
     case WSCLOCK:
-        recalculate_tau();
+        set_bit_r_to_zero();
+        break;
     }
+
+    last_tick_data.complexidade = current_tick_data.complexidade;
+    last_tick_data.page_miss_count = current_tick_data.page_miss_count;
+    last_tick_data.page_acess_count = current_tick_data.page_acess_count;
 }
 
 #define M_PI 3.14159265358979323846
@@ -355,50 +428,44 @@ double generateNormalRandomNumber(double mean, double stdDev)
     u1 = rand() * (1.0 / RAND_MAX);
     u2 = rand() * (1.0 / RAND_MAX);
     double z0 = sqrt(-2.0 * log(u1)) * cos(2 * M_PI * u2);
-    return z0 * stdDev + mean;
+    double result = z0 * stdDev + mean;
+    if (result < 0)
+    {
+        result = 0;
+    }
+    else if (result >= VIRTUAL_MEMORY_SIZE)
+    {
+        result = VIRTUAL_MEMORY_SIZE - 1;
+    }
+    return result;
 }
 
-void loop(int hits_per_tick)
+void loop(int hits_per_tick, int num_ticks, int stdDevMultiplier, int seed)
 {
     unsigned int virtual_address = 0;
     unsigned int _physical_address;
-    int j;
     int i;
-    srand(0);
+    int j;
+
+    srand(seed);
 
     double mean = VIRTUAL_MEMORY_SIZE / 2;
-    double stdDev = VIRTUAL_MEMORY_SIZE / 10;
+    double stdDev = stdDevMultiplier * VIRTUAL_MEMORY_SIZE / 100;
 
-    do
+    for (i = 1; i <= num_ticks; i++)
     {
         for (j = 0; j < hits_per_tick; j++)
         {
             virtual_address = generateNormalRandomNumber(mean, stdDev);
-
-            if (i > 100) {
-                return;
-            }
-
-            if (virtual_address >= VIRTUAL_MEMORY_SIZE)
+            _physical_address = virtual_to_physical(virtual_address);
+            if (_physical_address > REAL_MEMORY_SIZE)
             {
-                printf("Erro: Endereço virtual %u inválido\n", virtual_address);
-                return;
+                printf("Erro ao traduzir endereço virtual %u\n", virtual_address);
             }
-            _physical_address = virtual_to_physical(virtual_address, ticks);
-            if (_physical_address == -1)
-            {
-                printf("Erro ao converter endereço virtual para físico\n");
-                return;
-            }
-            else if (_physical_address > REAL_MEMORY_SIZE)
-            {
-                printf("Erro ao converter endereço virtual para físico\n");
-                return;
-            }
+            virtual_time++;
         }
         clock_tick();
-        i += 1;
-    } while (1);
+    }
 }
 
 int main(int argc, char **argv)
@@ -452,19 +519,41 @@ int main(int argc, char **argv)
         break;
     }
 
-    int hits_per_tick = 1000;
+    current_tick_data.page_miss_count = 0;
+    current_tick_data.page_acess_count = 0;
+    current_tick_data.complexidade = 0;
+
+    last_tick_data.page_miss_count = 0;
+    last_tick_data.page_acess_count = 0;
+    last_tick_data.complexidade = 0;
+
+    int hits_per_tick = 100000;
+    int num_ticks = 100;
+    int seed = 1;
+    int stdDevMultiplier = 30;
     if (argc > 2)
     {
-        hits_per_tick = atoi(argv[2]);
+        tau = atoi(argv[2]);
     }
 
-    loop(hits_per_tick);
+    loop(hits_per_tick, num_ticks, stdDevMultiplier, seed);
+
+    page_acess_count = current_tick_data.page_acess_count;
+    page_miss_count = current_tick_data.page_miss_count;
+    complexidade = current_tick_data.complexidade;
     printf("-------------------\n");
     printf("Page acess count: %lu\n", page_acess_count);
     printf("Page miss count: %lu\n", page_miss_count);
     printf("Ticks: %lu\n", ticks);
     printf("Acessos por tick: %d\n", hits_per_tick);
     printf("Complexity: %lu\n", complexidade);
+    printf("Page fault rate: %f\n", (double)page_miss_count / (double)page_acess_count);
+    printf("Seed: %d\n", seed);
+    printf("Standard Deviation: %d (%d\%)\n", stdDevMultiplier * VIRTUAL_MEMORY_SIZE / 100, stdDevMultiplier);
+    printf("tau: %d\n", tau);
+#ifdef DEBUG
+    print_page_table();
+#endif
 
     switch (algorithm)
     {
@@ -474,6 +563,7 @@ int main(int argc, char **argv)
     case AGING:
         break;
     case WSCLOCK:
+        wsclock_free();
         break;
     }
 
@@ -495,12 +585,12 @@ int main(int argc, char **argv)
      * e a cada X acessos, realizar uma interrupção
      *
      * Para encontrar o tau, checar o ultimo tick, para variar o tau dinamicamente
-     * 
+     *
      * Usar uma memória real de 2GB e uma memória virtual de 4GB
      * Usar um tick real de algum processador real
-     * 
+     *
      * Refazer os números aleatórios em C
-     * 
+     *
      */
 
     return 0;
