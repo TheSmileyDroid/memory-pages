@@ -527,10 +527,10 @@ int main(int argc, char **argv)
     last_tick_data.page_acess_count = 0;
     last_tick_data.complexidade = 0;
 
-    int hits_per_tick = 100000;
-    int num_ticks = 100;
+    int hits_per_tick = 1000;
+    int num_ticks = 1000;
     int seed = 1;
-    int stdDevMultiplier = 30;
+    int stdDevMultiplier = 10;
     if (argc > 2)
     {
         tau = atoi(argv[2]);
