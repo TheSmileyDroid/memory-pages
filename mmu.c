@@ -59,6 +59,7 @@ typedef struct tick_data
   unsigned long page_miss_count;
   unsigned long page_acess_count;
   unsigned long complexidade;
+  unsigned long tau;
 } tick_data;
 
 tick_data current_tick_data;
@@ -71,7 +72,7 @@ typedef enum
   WSCLOCK
 } page_replacement_algorithm;
 
-page_replacement_algorithm algorithm = AGING;
+page_replacement_algorithm algorithm = WSCLOCK;
 
 /**Relogio**/
 
@@ -249,6 +250,7 @@ void age_page_table()
 {
   for (int i = 0; i < VIRTUAL_ADDRESS_SPACE_SIZE; i++)
   {
+    current_tick_data.complexidade++;
     page_table[i].mru_count >>= 1;
     if (page_table[i].referenced)
     {
@@ -266,6 +268,7 @@ void age_page_table()
 
   for (int i = 0; i < VIRTUAL_ADDRESS_SPACE_SIZE; i++)
   {
+    current_tick_data.complexidade++;
     if (page_table[i].present == 1)
     {
       aging_list[size].virtual_page = i;
@@ -310,6 +313,7 @@ int select_victim_page()
   int victim_page = VIRTUAL_ADDRESS_SPACE_SIZE;
   while (victim_page == VIRTUAL_ADDRESS_SPACE_SIZE && aging_list_index < AGING_LIST_SIZE)
   {
+    current_tick_data.complexidade++;
     if (aging_list[aging_list_index].page_table_entry->present == 1)
     {
       victim_page = aging_list[aging_list_index].virtual_page;
@@ -562,9 +566,7 @@ void set_bit_r_to_zero()
   }
 }
 
-#define MAX_VARIATION 100    // +100%
-#define MIN_VARIATION 0.01   // +1%
-#define AJUSTMENT_FACTOR 100 // Apenas o Fator de Ajuste
+int tau_variation = 0;
 
 void adaptive_variation()
 {
@@ -580,23 +582,53 @@ void adaptive_variation()
   double last_rate = (double)last_tick_data.page_miss_count /
                      (double)last_tick_data.page_acess_count;
 
-  double difference = current_rate - last_rate;
+  double variation = current_rate - last_rate;
 
-  // Ajuste a taxa de variação proporcionalmente à diferença
-  double variation = 1.0;
-  if (difference > 0)
+  short variation_sign = 0;
+  if (variation > 0)
   {
-    variation = 1.0 + difference * AJUSTMENT_FACTOR;
+    variation_sign = 1;
   }
-  else if (difference < 0)
+  else if (variation < 0)
   {
-    variation = 1.0 / (1.0 - difference * AJUSTMENT_FACTOR);
+    variation_sign = -1;
   }
 
-  // Atualize o valor de tau com base na taxa de variação adaptativa
-  tau = tau * variation;
+  short tau_variation_sign = 1;
+  if (tau_variation > 0)
+  {
+    tau_variation_sign = 1;
+  }
+  else if (tau_variation < 0)
+  {
+    tau_variation_sign = -1;
+  }
 
-  return;
+  // Objetivo reduzir a taxa de page miss
+  // Se a variação for positiva, a taxa de page miss está aumentando
+  // Se a variação for negativa, a taxa de page miss está diminuindo
+
+  // Se a variação for positiva, a tau_variation deve ser positiva
+  // Se a variação for negativa, a tau_variation deve ser negativa
+
+  if (variation_sign == tau_variation_sign)
+  {
+    // Se a variação e a tau_variation tiverem o mesmo sinal, aumente a tau com base na diferença
+    tau_variation += variation * 1000;
+  }
+  else
+  {
+    // Se a variação e a tau_variation tiverem sinais opostos, diminua a tau com base na diferença
+    tau_variation -= variation * 1000;
+  }
+
+  if (abs(tau_variation) < 1000)
+  {
+    tau_variation = 1000 * tau_variation_sign;
+  }
+
+  // Atualize o valor de tau
+  tau += tau_variation;
 }
 
 void clock_interrupt()
