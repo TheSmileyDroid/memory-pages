@@ -1,34 +1,420 @@
 Compilando...
+Executando... Relógio com 5% de desvio padrão
 -------------------
 *Algorithm: Relógio
-*Page acess count: 10000
-*Ticks: 100
-*Acessos por tick: 100
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
 *Seed: 1
-*Standard Deviation: 429496729 (10%)
-*tau: 200
-Complexity: 104862628
-Page miss count: 5028
-Page fault rate: 0.502800
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 100
+Complexity: 1048855245
+Page miss count: 278540
+Page fault rate: 0.092847
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 100
+Complexity: 1048855383
+Page miss count: 278576
+Page fault rate: 0.092859
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 100
+Complexity: 1048855286
+Page miss count: 278515
+Page fault rate: 0.092838
+-------------------------
+Executando... WSClock com 5% de desvio padrão
 -------------------
 *Algorithm: WSClock
-*Page acess count: 10000
-*Ticks: 100
-*Acessos por tick: 100
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
 *Seed: 1
-*Standard Deviation: 429496729 (10%)
-*tau: 10000
-Complexity: 104876598
-Page miss count: 5008
-Page fault rate: 0.500800
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 1185833
+Complexity: 1048808879
+Page miss count: 188836
+Page fault rate: 0.062945
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 1186379
+Complexity: 1048808005
+Page miss count: 191659
+Page fault rate: 0.063886
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 1200245
+Complexity: 1048807410
+Page miss count: 192001
+Page fault rate: 0.064000
+-------------------------
+Executando... Aging com 5% de desvio padrão
 -------------------
 *Algorithm: Aging
-*Page acess count: 10000
-*Ticks: 100
-*Acessos por tick: 100
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
 *Seed: 1
-*Standard Deviation: 429496729 (10%)
-*tau: 200
-Complexity: 7747928064
-Page miss count: 4926
-Page fault rate: 0.492600
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 100
+Complexity: 2097292498
+Page miss count: 140498
+Page fault rate: 0.046833
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 100
+Complexity: 2097292792
+Page miss count: 140792
+Page fault rate: 0.046931
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 214748364 (5 per cent)
+*tau: 100
+Complexity: 2097292680
+Page miss count: 140680
+Page fault rate: 0.046893
+-------------------------
+Executando... Relógio com 10% de desvio padrão
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 100
+Complexity: 1049071325
+Page miss count: 494578
+Page fault rate: 0.164859
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 100
+Complexity: 1049071351
+Page miss count: 494586
+Page fault rate: 0.164862
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 100
+Complexity: 1049071256
+Page miss count: 494549
+Page fault rate: 0.164850
+-------------------------
+Executando... WSClock com 10% de desvio padrão
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 1109686
+Complexity: 1074589118
+Page miss count: 354048
+Page fault rate: 0.118016
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 1110400
+Complexity: 1078355346
+Page miss count: 368686
+Page fault rate: 0.122895
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 1113948
+Complexity: 1080639972
+Page miss count: 375413
+Page fault rate: 0.125138
+-------------------------
+Executando... Aging com 10% de desvio padrão
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 100
+Complexity: 2097409164
+Page miss count: 257164
+Page fault rate: 0.085721
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 100
+Complexity: 2097409366
+Page miss count: 257366
+Page fault rate: 0.085789
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 429496729 (10 per cent)
+*tau: 100
+Complexity: 2097409428
+Page miss count: 257428
+Page fault rate: 0.085809
+-------------------------
+Executando... Relógio com 25% de desvio padrão
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 100
+Complexity: 1049456369
+Page miss count: 879500
+Page fault rate: 0.293167
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 100
+Complexity: 1049455850
+Page miss count: 878982
+Page fault rate: 0.292994
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 100
+Complexity: 1049455952
+Page miss count: 879062
+Page fault rate: 0.293021
+-------------------------
+Executando... WSClock com 25% de desvio padrão
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 1005073
+Complexity: 1117629869
+Page miss count: 1284111
+Page fault rate: 0.428037
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 1007057
+Complexity: 1116163471
+Page miss count: 1264249
+Page fault rate: 0.421416
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 1009045
+Complexity: 1119244829
+Page miss count: 1284737
+Page fault rate: 0.428246
+-------------------------
+Executando... Aging com 25% de desvio padrão
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 100
+Complexity: 2098263224
+Page miss count: 1111224
+Page fault rate: 0.370408
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 100
+Complexity: 2098261655
+Page miss count: 1109655
+Page fault rate: 0.369885
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 1073741824 (25 per cent)
+*tau: 100
+Complexity: 2098262628
+Page miss count: 1110628
+Page fault rate: 0.370209
+-------------------------
+Executando... Relógio com 40% de desvio padrão
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 100
+Complexity: 1049473053
+Page miss count: 896208
+Page fault rate: 0.298736
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 100
+Complexity: 1049472528
+Page miss count: 895661
+Page fault rate: 0.298554
+-------------------
+*Algorithm: Relógio
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 100
+Complexity: 1049473058
+Page miss count: 896172
+Page fault rate: 0.298724
+-------------------------
+Executando... WSClock com 40% de desvio padrão
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 1004069
+Complexity: 1096363222
+Page miss count: 1167147
+Page fault rate: 0.389049
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 1008067
+Complexity: 1102985160
+Page miss count: 1162908
+Page fault rate: 0.387636
+-------------------
+*Algorithm: WSClock
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 1003080
+Complexity: 1100347244
+Page miss count: 1163342
+Page fault rate: 0.387781
+-------------------------
+Executando... Aging com 40% de desvio padrão
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 1
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 100
+Complexity: 2098244199
+Page miss count: 1092199
+Page fault rate: 0.364066
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 2
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 100
+Complexity: 2098243133
+Page miss count: 1091133
+Page fault rate: 0.363711
+-------------------
+*Algorithm: Aging
+*Page acess count: 3000000
+*Interrupções: 1000
+*Acessos por tick: 3000
+*Seed: 3
+*Standard Deviation: 1717986918 (40 per cent)
+*tau: 100
+Complexity: 2098246129
+Page miss count: 1094129
+Page fault rate: 0.364710
